@@ -66,16 +66,16 @@ public class PaintingWidget extends ButtonWidget {
     	return  y >= PaintingSelectingScreen.TOP && y + height <= maxY;
     }
     
-    public void drawTexturedModalRect(int x, int y, int xOffset, int yOffset, int width, int height) {
+    public void drawTexturedModalRect(int theX, int theY, int xOffset, int yOffset, int width, int height) {
         float f = 1/ (float)KZ_WIDTH;
-        float f1 =1/ (float)KZ_HEIGHT;
+        float f1 = 1/ (float)KZ_HEIGHT;
         
         Tessellator tessellator = Tessellator.INSTANCE;
         tessellator.startQuads();
-        tessellator.vertex(x + 0, y + height, zOffset, (float)(xOffset + 0) * f, (float)(yOffset + height) * f1);
-        tessellator.vertex(x + width, y + height, zOffset, (float)(xOffset + width) * f, (float)(yOffset + height) * f1);
-        tessellator.vertex(x + width, y + 0, zOffset, (float)(xOffset + width) * f, (float)(yOffset + 0) * f1);
-        tessellator.vertex(x + 0, y + 0, zOffset, (float)(xOffset + 0) * f, (float)(yOffset + 0) * f1);
+        tessellator.vertex(theX, theY + height, zOffset, (float)(xOffset) * f, (float)(yOffset + height) * f1);
+        tessellator.vertex(theX + width, theY + height, zOffset, (float)(xOffset + width) * f, (float)(yOffset + height) * f1);
+        tessellator.vertex(theX + width, theY, zOffset, (float)(xOffset + width) * f, (float)(yOffset) * f1);
+        tessellator.vertex(theX, theY, zOffset, (float)(xOffset) * f, (float)(yOffset) * f1);
         tessellator.draw();
     }
 

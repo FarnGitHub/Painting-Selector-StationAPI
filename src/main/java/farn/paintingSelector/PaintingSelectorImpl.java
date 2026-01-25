@@ -20,26 +20,24 @@ public class PaintingSelectorImpl {
         if (!player.world.isRemote) {
             PaintingPlacementData placementData = ((PaintingPlacementPlayer)player).paintingSelect_getPaintingData();
             if(placementData != null) {
-                if(!placementData.isInPlaceableRange(player)) {
-                    player.sendMessage("Too far away from placement position");
-                    setPlacementData(player, null);
-                    return;
-                }
-
-                PaintingVariants painting = getPaintingFromName(messagePacket.strings[0]);
-                if (painting != null) {
-                    if (summonPaintingEntity(
-                            player.world,
-                            createPaintingEntity(player.world, placementData, painting)))
-                        player.inventory.removeStack(placementData.itemSlot(), 1);
-                    else
-                        player.sendMessage("Painting is too large or some other reason");
+                if(placementData.isInPlaceableRange(player)) {
+                    PaintingVariants painting = getPaintingFromName(messagePacket.strings[0]);
+                    if (painting != null) {
+                        if (summonPaintingEntity(
+                                player.world,
+                                createPaintingEntity(player.world, placementData, painting)))
+                            player.inventory.removeStack(placementData.itemSlot(), 1);
+                        else
+                            player.sendMessage("Failed to place painting");
+                    } else {
+                        player.sendMessage("Painting doesn't exist");
+                    }
                 } else {
-                    player.sendMessage("Can't find that painting");
+                    player.sendMessage("Too far away from placement position");
                 }
                 setPlacementData(player, null);
             } else {
-                player.sendMessage("Can't find painting placement data");
+                player.sendMessage("Can't get painting placement data");
             }
         }
     }
@@ -75,7 +73,6 @@ public class PaintingSelectorImpl {
                     break;
                 default: return false;
             }
-
             setPlacementData(player, new PaintingPlacementData(x,y,z, player.inventory.selectedSlot, newSide));
             PacketHelper.sendTo(player, new MessagePacket(PaintingSelectorStationAPI.NAMESPACE.id("open_painting_screen")));
         }
