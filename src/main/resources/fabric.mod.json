@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "painting_selector",
+  "version": "${version}",
+  "name": "Painting Selector",
+  "description": "Allowed you to select Painting whatever you want",
+  "authors": [
+    "farnfarn02",
+    "Davidee"
+  ],
+  "license": "MIT",
+  "icon": "assets/painting_selector/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "stationapi:event_bus": [
+      "farn.paintingSelector.PaintingSelectorStationAPI"
+    ]
+  },
+  "mixins": [
+    "painting_selector.mixins.json"
+  ],
+  "depends": {
+    "minecraft": "1.0.0-beta.7.3",
+    "stationapi": "*"
+  }
+}
