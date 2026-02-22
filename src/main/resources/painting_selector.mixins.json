@@ -4,8 +4,7 @@
   "package": "farn.paintingSelector.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PaintingItemMixin",
-    "PlayerEntityMixin"
+    "PaintingItemMixin"
   ],
   "injectors": {
     "defaultRequire": 1

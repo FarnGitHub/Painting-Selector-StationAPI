@@ -9,9 +9,6 @@ import net.minecraft.entity.decoration.painting.PaintingVariants;
 import org.lwjgl.opengl.GL11;
 
 public class PaintingWidget extends ButtonWidget {
-	
-	private String TEXTURE = "/art/kz.png";
-    
 	protected PaintingVariants art;
     private static final int EXT = 3;
     private static final int YELLOW = -256;
@@ -49,7 +46,7 @@ public class PaintingWidget extends ButtonWidget {
     @Override
     public void render(Minecraft mc, int mouseX, int mouseY) {
         if (shouldDraw()) {
-            mc.textureManager.bindTexture(mc.textureManager.getTextureId(TEXTURE));
+            mc.textureManager.bindTexture(mc.textureManager.getTextureId("/art/kz.png"));
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             boolean mouseOver = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
             drawTexturedModalRect(x, y, art.textureOffsetX, art.textureOffsetY, width, height);

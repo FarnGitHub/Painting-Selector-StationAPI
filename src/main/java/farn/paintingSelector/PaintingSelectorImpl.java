@@ -1,62 +1,53 @@
 package farn.paintingSelector;
 
-import farn.paintingSelector.data.PaintingPlacementData;
-import farn.paintingSelector.data.PaintingPlacementPlayer;
-import farn.paintingSelector.screen.PaintingSelectingScreen;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
+import farn.paintingSelector.screen.PaintingSelectHandler;
+import farn.paintingSelector.screen.PaintingSelectInventory;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariants;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.ClientWorld;
 import net.minecraft.world.World;
+import net.modificationstation.stationapi.api.gui.screen.container.GuiHelper;
 import net.modificationstation.stationapi.api.network.packet.MessagePacket;
-import net.modificationstation.stationapi.api.network.packet.PacketHelper;
 
 public class PaintingSelectorImpl {
 
     public static void handlePlacePainting(PlayerEntity player, MessagePacket messagePacket) {
-        if (!player.world.isRemote) {
-            PaintingPlacementData placementData = ((PaintingPlacementPlayer)player).paintingSelect_getPaintingData();
-            if(placementData != null) {
-                if(placementData.isInPlaceableRange(player)) {
-                    PaintingVariants painting = getPaintingFromName(messagePacket.strings[0]);
-                    if (painting != null) {
-                        if (summonPaintingEntity(
-                                player.world,
-                                createPaintingEntity(player.world, placementData, painting)))
-                            player.inventory.removeStack(placementData.itemSlot(), 1);
-                        else
-                            player.sendMessage("Failed to place painting");
-                    } else {
-                        player.sendMessage("Painting doesn't exist");
-                    }
-                } else {
-                    player.sendMessage("Too far away from placement position");
-                }
-                setPlacementData(player, null);
-            } else {
-                player.sendMessage("Can't get painting placement data");
-            }
+        if (player.world.isRemote) return;
+        if(!(player.currentScreenHandler instanceof PaintingSelectHandler handler)) {
+            player.sendMessage("Not in the painting selector's screen");
+            return;
         }
-    }
-
-    @SuppressWarnings("all")
-    public static void handleOpenPaintingScreen(PlayerEntity playerEntity, MessagePacket messagePacket) {
-        if(FabricLoader.getInstance().getEnvironmentType().equals(EnvType.CLIENT)) {
-            openPaintingScreen();
+        if(!handler.canUse(player)) {
+            player.sendMessage("Too far away from placement position");
+            return;
         }
-    }
+        PaintingVariants painting = getPaintingFromName(messagePacket.strings[0]);
+        if (painting == null) {
+            player.sendMessage("Painting doesn't exist");
+            return;
+        }
 
-    @SuppressWarnings("all")
-    @Environment(EnvType.CLIENT)
-    public static void openPaintingScreen() {
-        ((Minecraft) FabricLoader.getInstance().getGameInstance()).setScreen(new PaintingSelectingScreen());
+        if (summonPaintingEntity(
+                player.world,
+                createPaintingEntity(
+                        player.world,
+                        handler.paintingSelectInventory,
+                        painting))) {
+            player.inventory.removeStack(handler.paintingSelectInventory.slot, 1);
+        } else
+            player.sendMessage("Failed to place painting or the painting is too large");
+
     }
 
     public static boolean usePainting(PlayerEntity player, World world, int x, int y, int z, int side) {
+
         if(!world.isRemote) {
+            //prevent crash when either server or client ScreenHandler desync
+            if(player.currentScreenHandler != player.playerScreenHandler) {
+                player.closeHandledScreen();
+            }
+
             int newSide;
             switch (side) {
                 case 4:
@@ -73,19 +64,22 @@ public class PaintingSelectorImpl {
                     break;
                 default: return false;
             }
-            setPlacementData(player, new PaintingPlacementData(x,y,z, player.inventory.selectedSlot, newSide));
-            PacketHelper.sendTo(player, new MessagePacket(PaintingSelectorStationAPI.NAMESPACE.id("open_painting_screen")));
+            PaintingSelectInventory paintingSelectInventory = new PaintingSelectInventory(
+                    player, x,y,z, newSide);
+            GuiHelper.openGUI(player,
+                    PaintingSelectorStationAPI.NAMESPACE.id("open_painting_screen"),
+                    paintingSelectInventory, new PaintingSelectHandler(paintingSelectInventory));
         }
         return true;
     }
 
-    private static PaintingEntity createPaintingEntity(World world, PaintingPlacementData handler, PaintingVariants painting) {
+    private static PaintingEntity createPaintingEntity(World world, PaintingSelectInventory handler, PaintingVariants painting) {
         PaintingEntity paintingEntity = new PaintingEntity(world);
-        paintingEntity.attachmentX = handler.x();
-        paintingEntity.attachmentY = handler.y();
-        paintingEntity.attachmentZ = handler.z();
+        paintingEntity.attachmentX = handler.x;
+        paintingEntity.attachmentY = handler.y;
+        paintingEntity.attachmentZ = handler.z;
         paintingEntity.variant = painting;
-        paintingEntity.setFacing(handler.side());
+        paintingEntity.setFacing(handler.side);
         return paintingEntity;
     }
 
@@ -99,9 +93,5 @@ public class PaintingSelectorImpl {
         } catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    private static void setPlacementData(PlayerEntity player, PaintingPlacementData data) {
-        ((PaintingPlacementPlayer) player).paintingSelect_setPaintingData(data);
     }
 }

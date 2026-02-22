@@ -21,9 +21,6 @@ loom {
     if (project.hasProperty("accesswidener_name") && project.accesswidener_name.length() > 0) {
         accessWidenerPath = file("src/main/resources/${project.accesswidener_name}.accesswidener")
     }
-    mixin {
-        useLegacyMixinAp = false
-    }
 }
 
 repositories {

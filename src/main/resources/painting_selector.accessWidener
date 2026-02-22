@@ -1,0 +1,5 @@
+classTweaker v1	named
+
+accessible	method net/minecraft/client/gui/screen/ingame/HandledScreen isPointOverSlot (Lnet/minecraft/screen/slot/Slot;II)Z
+extendable	method net/minecraft/client/gui/screen/ingame/HandledScreen isPointOverSlot (Lnet/minecraft/screen/slot/Slot;II)Z
+accessible method net/minecraft/entity/player/PlayerEntity closeHandledScreen ()V
