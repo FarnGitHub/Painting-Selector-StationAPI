@@ -1,0 +1,4 @@
+classTweaker v1 named
+
+transitive-inject-interface net/minecraft/entity/player/PlayerEntity farn/paintingSelector/data/PaintingPlacementPlayer
+accessible field net/minecraft/client/Minecraft INSTANCE Lnet/minecraft/client/Minecraft;

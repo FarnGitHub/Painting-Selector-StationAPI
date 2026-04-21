@@ -12,12 +12,12 @@ public class PlayerEntityMixin implements PaintingPlacementPlayer {
     PaintingPlacementData paintingData;
 
     @Override
-    public PaintingPlacementData paintingSelect_getPaintingData() {
+    public PaintingPlacementData paintSelect_getPaintingData() {
         return paintingData;
     }
 
     @Override
-    public void paintingSelect_setPaintingData(PaintingPlacementData paintingSelectHandler) {
+    public void paintSelect_setPaintingData(PaintingPlacementData paintingSelectHandler) {
         this.paintingData = paintingSelectHandler;
     }
 

@@ -1,10 +1,12 @@
 package farn.paintingSelector.data;
 
-import javax.annotation.Nullable;
-
 public interface PaintingPlacementPlayer {
 
-    PaintingPlacementData paintingSelect_getPaintingData();
+    default PaintingPlacementData paintSelect_getPaintingData() {
+        throw new AssertionError("Method not implemented.");
+    }
 
-    void paintingSelect_setPaintingData(@Nullable PaintingPlacementData paintingSelectHandler);
+    default void paintSelect_setPaintingData(PaintingPlacementData paintingSelectHandler) {
+        throw new AssertionError("Method not implemented.");
+    }
 }

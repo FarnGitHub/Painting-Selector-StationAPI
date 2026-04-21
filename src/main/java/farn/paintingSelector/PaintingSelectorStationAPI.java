@@ -13,8 +13,8 @@ public class PaintingSelectorStationAPI {
 
     @EventListener
     public void registerPacket(MessageListenerRegistryEvent event) {
-        event.register(NAMESPACE.id("place_painting"), PaintingSelectorImpl::handlePlacePainting);
-        event.register(NAMESPACE.id("open_painting_screen"),  PaintingSelectorImpl::handleOpenPaintingScreen);
+        event.register(NAMESPACE.id("place_painting"), PaintingSelectorImpl::handlePlacing);
+        event.register(NAMESPACE.id("open_painting_screen"),  PaintingSelectorImpl::openScreen);
     }
 
 }
