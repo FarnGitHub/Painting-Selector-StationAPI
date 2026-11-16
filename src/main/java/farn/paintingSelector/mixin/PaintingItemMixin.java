@@ -14,6 +14,6 @@ public class PaintingItemMixin {
 
     @WrapMethod(method="useOnBlock")
     public boolean useOnBlock(ItemStack stack, PlayerEntity player, World world, int x, int y, int z, int side, Operation<Boolean> original) {
-        return PaintingSelectorImpl.usePainting(player, world, x,y,z, side);
+        return PaintingSelectorImpl.usePainting(x,y,z, side);
     }
 }

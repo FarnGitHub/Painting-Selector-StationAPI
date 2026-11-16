@@ -57,6 +57,14 @@ public class PaintingWidget extends ButtonWidget {
                 fill(x - EXT, y, x, y + height, YELLOW); //middle rectangle to the left
                 fill(x + width, y, x + width + EXT, y + height, YELLOW); //middle rectangle to the right
             }
+
+            if (mouseOver) {
+                int textWidth = mc.textRenderer.getWidth(this.art.id);
+                int tooltipX = mouseX + 8;
+                int tooltipY = mouseY - 4;
+                this.fillGradient(tooltipX - 3, tooltipY - 3, tooltipX + textWidth + 3, tooltipY + 8 + 3, -1073741824, -1073741824);
+                mc.textRenderer.drawWithShadow(this.art.id, tooltipX, tooltipY, -1);
+            }
         }
     }
     public boolean shouldDraw() {

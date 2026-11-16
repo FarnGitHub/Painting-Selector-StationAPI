@@ -1,89 +1,84 @@
 package farn.paintingSelector;
 
-import farn.paintingSelector.screen.PaintingSelectHandler;
-import farn.paintingSelector.screen.PaintingSelectInventory;
+import farn.paintingSelector.screen.PaintingSelectingScreen;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariants;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.ClientWorld;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import net.modificationstation.stationapi.api.gui.screen.container.GuiHelper;
 import net.modificationstation.stationapi.api.network.packet.MessagePacket;
+import net.modificationstation.stationapi.api.util.SideUtil;
 
 public class PaintingSelectorImpl {
 
     public static void handlePlacePainting(PlayerEntity player, MessagePacket messagePacket) {
-        if (player.world.isRemote) return;
-        if(!(player.currentScreenHandler instanceof PaintingSelectHandler handler)) {
-            player.sendMessage("Not in the painting selector's screen");
+        if (player.world.isRemote || messagePacket.ints == null || messagePacket.strings == null) return;
+
+        ItemStack stack = player.inventory.getSelectedItem();
+        if(stack == null || stack.itemId != Item.PAINTING.id) {
+            player.sendMessage("Must have painting item");
             return;
         }
-        if(!handler.canUse(player)) {
+
+        int x = messagePacket.ints[0];
+        int y = messagePacket.ints[1];
+        int z = messagePacket.ints[2];
+        int side = messagePacket.ints[3];
+        if(player.getSquaredDistance(x + 0.5, y + 0.5, z + 0.5) > 64.0) {
             player.sendMessage("Too far away from placement position");
             return;
         }
+
         PaintingVariants painting = getPaintingFromName(messagePacket.strings[0]);
         if (painting == null) {
             player.sendMessage("Painting doesn't exist");
             return;
         }
 
-        if (summonPaintingEntity(
-                player.world,
-                createPaintingEntity(
-                        player.world,
-                        handler.paintingSelectInventory,
-                        painting))) {
-            player.inventory.removeStack(handler.paintingSelectInventory.slot, 1);
+        if (summonPainting(player.world,x,y,z,side,painting)) {
+            player.inventory.removeStack(player.inventory.selectedSlot, 1);
         } else
             player.sendMessage("Failed to place painting or the painting is too large");
 
     }
 
-    public static boolean usePainting(PlayerEntity player, World world, int x, int y, int z, int side) {
-
-        if(!world.isRemote) {
-            //prevent crash when either server or client ScreenHandler desync
-            if(player.currentScreenHandler != player.playerScreenHandler) {
-                player.closeHandledScreen();
-            }
-
-            int newSide;
-            switch (side) {
-                case 4:
-                    newSide = 1;
-                    break;
-                case 3:
-                    newSide = 2;
-                    break;
-                case 2:
-                    newSide = 0;
-                    break;
-                case 5:
-                    newSide = 3;
-                    break;
-                default: return false;
-            }
-            PaintingSelectInventory paintingSelectInventory = new PaintingSelectInventory(
-                    player, x,y,z, newSide);
-            GuiHelper.openGUI(player,
-                    PaintingSelectorStationAPI.NAMESPACE.id("open_painting_screen"),
-                    paintingSelectInventory, new PaintingSelectHandler(paintingSelectInventory));
+    public static boolean usePainting(int x, int y, int z, int side) {
+        int newSide;
+        switch (side) {
+            case 4:
+                newSide = 1;
+                break;
+            case 3:
+                newSide = 2;
+                break;
+            case 2:
+                newSide = 0;
+                break;
+            case 5:
+                newSide = 3;
+                break;
+            default: return false;
         }
+        SideUtil.runClient(() -> openScreen(x,y,z, newSide));
         return true;
     }
 
-    private static PaintingEntity createPaintingEntity(World world, PaintingSelectInventory handler, PaintingVariants painting) {
-        PaintingEntity paintingEntity = new PaintingEntity(world);
-        paintingEntity.attachmentX = handler.x;
-        paintingEntity.attachmentY = handler.y;
-        paintingEntity.attachmentZ = handler.z;
-        paintingEntity.variant = painting;
-        paintingEntity.setFacing(handler.side);
-        return paintingEntity;
+    @Environment(EnvType.CLIENT)
+    private static void openScreen(int x, int y, int z, int side) {
+        Minecraft.INSTANCE.setScreen(new PaintingSelectingScreen(x, y, z, side));
     }
 
-    private static boolean summonPaintingEntity(World world, PaintingEntity paintingEntity) {
+    private static boolean summonPainting(World world, int x, int y, int z, int side, PaintingVariants painting) {
+        PaintingEntity paintingEntity = new PaintingEntity(world);
+        paintingEntity.attachmentX = x;
+        paintingEntity.attachmentY = y;
+        paintingEntity.attachmentZ = z;
+        paintingEntity.variant = painting;
+        paintingEntity.setFacing(side);
         return paintingEntity.canStayAttached() && world.spawnEntity(paintingEntity);
     }
 

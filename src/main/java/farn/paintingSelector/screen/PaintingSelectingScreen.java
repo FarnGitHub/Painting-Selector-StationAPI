@@ -1,10 +1,9 @@
 package farn.paintingSelector.screen;
 
 import farn.paintingSelector.PaintingSelectorStationAPI;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.entity.decoration.painting.PaintingVariants;
-import net.minecraft.screen.slot.Slot;
 import net.modificationstation.stationapi.api.network.packet.MessagePacket;
 import net.modificationstation.stationapi.api.network.packet.PacketHelper;
 import org.lwjgl.input.Keyboard;
@@ -12,30 +11,36 @@ import org.lwjgl.input.Mouse;
 
 import java.util.List;
 
-public class PaintingSelectingScreen extends HandledScreen {
+public class PaintingSelectingScreen extends Screen {
 
     private static final int CLOSE_ID = 300;
     public static final int TOP = 21;
 
-    @SuppressWarnings("all")
-    private int bottom;
     private int offset;
     private int minYOffset;
-    private final PaintingVariants[] arts;
 
-    public PaintingSelectingScreen(PaintingSelectInventory paintingSelectInventory) {
-        super(new PaintingSelectHandler(paintingSelectInventory));
-        this.arts = PaintingVariants.values();
+    private final int placeX;
+    private final int placeY;
+    private final int placeZ;
+    private final int placeSide;
+
+    public PaintingSelectingScreen(int x, int y, int z, int side) {
         Keyboard.enableRepeatEvents(true);
+        this.placeX = x;
+        this.placeY = y;
+        this.placeZ = z;
+        this.placeSide = side;
     }
 
     protected void buttonClicked(ButtonWidget guibutton) {
         if (guibutton instanceof PaintingWidget paintButton) {
             MessagePacket packet = new MessagePacket(PaintingSelectorStationAPI.NAMESPACE.id("place_painting"));
             packet.strings = new String[]{paintButton.art.id};
+            packet.ints = new int[]{placeX, placeY, placeZ, placeSide};
             PacketHelper.send(packet);
         }
-        minecraft.player.closeHandledScreen();
+
+        this.minecraft.setScreen(null);
     }
 
     public void removed() {
@@ -47,19 +52,19 @@ public class PaintingSelectingScreen extends HandledScreen {
     public void init() {
         super.init();
         buttons.clear();
-        bottom = height-30;
+        int bottom = height - 30;
 
         final int START_X = 10;
         final int END_X = width - 10;
         final int GAP = 5;
 
         int x = START_X;
-        int y = 30, maxY = this.arts[0].height;
+        int y = 30, maxY = PaintingVariants.values()[0].height;
         int id = 0;
         int rowStartIndex = 0;
 
-        for (int index = 0; index < this.arts.length; ++index) {
-            PaintingVariants cur = this.arts[index];
+        for (int index = 0; index < PaintingVariants.values().length; ++index) {
+            PaintingVariants cur = PaintingVariants.values()[index];
 
             if (x + cur.width > END_X) {
                 centerRow(buttons, rowStartIndex, index - 1);
@@ -71,10 +76,10 @@ public class PaintingSelectingScreen extends HandledScreen {
             else if (cur.height > maxY)
                 maxY = cur.height;
 
-            buttons.add(new PaintingWidget(++id, x, y, cur,bottom));
+            buttons.add(new PaintingWidget(++id, x, y, cur, bottom));
             x += cur.width + GAP;
         }
-        centerRow(buttons, rowStartIndex, this.arts.length - 1);
+        centerRow(buttons, rowStartIndex, PaintingVariants.values().length - 1);
 
         minYOffset = bottom - (y + maxY);
         if (minYOffset >0)
@@ -83,36 +88,14 @@ public class PaintingSelectingScreen extends HandledScreen {
         buttons.add(new ButtonWidget(CLOSE_ID, width / 2 - 100, this.height - 25, "Cancel"));
     }
 
-    @SuppressWarnings("all")
-    private void centerRow(List list, int start, int end) {
-        int left = ((PaintingWidget)list.get(start)).left();
-        int right = ((PaintingWidget)list.get(end)).right();
-        int correction = (width - 20 - (right - left)) / 2;
-        for (int i = start; i <= end; ++i) {
-            PaintingWidget b = (PaintingWidget)list.get(i);
-            b.shiftX(correction);
-        }
-    }
-
-    @SuppressWarnings("all")
+    @Override
     public void onMouseEvent() {
         int l = Mouse.getEventDWheel();
-
-        if (l != 0)
-        {
-            if (l > 0)
-            {
-                l = 3;
-            }
-            else if (l < 0)
-            {
-                l = -3;
-            }
-            offset(l);
-        }
+        if (l != 0) offset(l > 0 ? 3 : -3);
         super.onMouseEvent();
     }
 
+    @Override
     public void onKeyboardEvent() {
         super.onKeyboardEvent();
         if (Keyboard.getEventKeyState()){
@@ -126,26 +109,12 @@ public class PaintingSelectingScreen extends HandledScreen {
             }
         }
     }
-    public void render(int mouseX, int mouseY, float tick) {
-        renderBackground();
-        drawCenteredTextWithShadow(textRenderer, "Select a Painting", width / 2, 10, 0xffffff);
-        for (Object o : buttons) {
-            if(o instanceof ButtonWidget button) {
-                button.render(this.minecraft, mouseX, mouseY);
-                if (o instanceof PaintingWidget widget && widget.isMouseOver(this.minecraft, mouseX, mouseY)) {
-                    int textWidth = this.minecraft.textRenderer.getWidth(widget.art.id);
-                    int tooltipX = mouseX + 8;
-                    int tooltipY = mouseY - 4;
-                    this.fillGradient(tooltipX - 3, tooltipY - 3, tooltipX + textWidth + 3, tooltipY + 8 + 3, -1073741824, -1073741824);
-                    this.minecraft.textRenderer.drawWithShadow(widget.art.id, tooltipX, tooltipY, -1);
-                }
-            }
-
-        }
-    }
 
     @Override
-    protected void drawBackground(float tickDelta) {
+    public void render(int mouseX, int mouseY, float tick) {
+        renderBackground();
+        super.render(mouseX, mouseY, tick);
+        drawCenteredTextWithShadow(textRenderer, "Select a Painting", width / 2, 10, 0xffffff);
     }
 
     private void offset(int i) {
@@ -154,15 +123,19 @@ public class PaintingSelectingScreen extends HandledScreen {
             dif = 0;
         if (dif < minYOffset)
             dif = minYOffset;
-        for (Object o : buttons) {
-            if (o instanceof PaintingWidget)
-                ((PaintingWidget)o).shiftY(dif-offset);
-        }
+        for (Object o : buttons)
+            if (o instanceof PaintingWidget p)
+                p.shiftY(dif-offset);
         offset = dif;
     }
 
-    @Override
-    public boolean isPointOverSlot(Slot slot, int x, int y) {
-        return false;
+    private void centerRow(List<PaintingWidget> list, int start, int end) {
+        int left = list.get(start).left();
+        int right = list.get(end).right();
+        int correction = (width - 20 - (right - left)) / 2;
+        for (int i = start; i <= end; ++i) {
+            PaintingWidget b = list.get(i);
+            b.shiftX(correction);
+        }
     }
 }
