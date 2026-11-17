@@ -13,7 +13,7 @@
   "environment": "*",
   "entrypoints": {
     "stationapi:event_bus": [
-      "farn.paintingSelector.PaintingSelectorStationAPI"
+      "farn.paintingSelector.listener.PacketListener"
     ]
   },
   "mixins": [
