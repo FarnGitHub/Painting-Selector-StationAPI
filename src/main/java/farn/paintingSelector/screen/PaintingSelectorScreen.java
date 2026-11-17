@@ -43,7 +43,7 @@ public class PaintingSelectorScreen extends Screen {
 
     protected void buttonClicked(ButtonWidget button) {
         if (button instanceof PaintingDisplayWidget p) {
-            MessagePacket packet = new MessagePacket(PacketListener.NS.id("open"));
+            MessagePacket packet = new MessagePacket(PacketListener.NS.id("place"));
             packet.bytes = new byte[]{pSide};
             packet.ints = new int[]{pX,pY,pZ};
             packet.strings = new String[]{p.art.id};
