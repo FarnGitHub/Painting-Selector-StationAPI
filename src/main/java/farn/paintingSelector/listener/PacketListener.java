@@ -18,7 +18,7 @@ public class PacketListener {
     @Entrypoint.Namespace
     public static Namespace NS;
 
-    private static final boolean client = FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
+    private static final boolean server = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
 
     @SuppressWarnings("unused")
     @EventListener
@@ -35,12 +35,14 @@ public class PacketListener {
             }
         });
         event.register(NS.id("open"), (player, message) -> {
-            if(client) {
+            try {
+                if(server) return;
                 int x = message.ints[0];
                 int y = message.ints[1];
                 int z = message.ints[2];
                 byte side = message.bytes[0];
                 openScreen(x, y, z, side);
+            } catch (NullPointerException | ArrayIndexOutOfBoundsException ignored) {
             }
         });
     }
